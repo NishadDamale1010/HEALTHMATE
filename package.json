@@ -29,6 +29,7 @@
   },
   "homepage": "https://github.com/NishadDamale1010/HEALTHMATE#readme",
   "dependencies": {
+    "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "ejs": "^3.1.10",
