@@ -32,10 +32,10 @@ const healthSchema = new mongoose.Schema({
 const Health = mongoose.model("Health", healthSchema);
 
 // Routes
-app.get("/", async (req, res) => {
-  const data = await Health.find().sort({ date: -1 });
-  res.render("index", { data });
+app.get("/", (req, res) => {
+  res.render("index", { title: "HealthMate - Your Health Assistant" });
 });
+
 
 app.post("/add", async (req, res) => {
   const { water, sleep, meals, mood } = req.body;
