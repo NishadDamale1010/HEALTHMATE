@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  </head>
+  <body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+      <div class="container">
+        <a class="navbar-brand fw-bold" href="/">HealthMate 🩺</a>
+      </div>
+    </nav>
+
+    <div class="container mt-5">
+      <h2 class="fw-bold mb-4 text-center">Your Health Dashboard</h2>
+
+      <div class="card shadow p-4 mb-4">
+        <form action="/add-log" method="POST" class="row g-3">
+          <div class="col-md-3">
+            <input type="number" name="waterIntake" placeholder="Water (ml)" class="form-control" required>
+          </div>
+          <div class="col-md-3">
+            <input type="number" name="sleepHours" placeholder="Sleep (hrs)" class="form-control" required>
+          </div>
+          <div class="col-md-3">
+            <input type="text" name="meals" placeholder="Meals" class="form-control" required>
+          </div>
+          <div class="col-md-2">
+            <input type="text" name="mood" placeholder="Mood" class="form-control" required>
+          </div>
+          <div class="col-md-1">
+            <button class="btn btn-success w-100">Add</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="card shadow">
+        <table class="table table-hover mb-0">
+          <thead class="table-primary text-center">
+            <tr>
+              <th>Date</th>
+              <th>Water (ml)</th>
+              <th>Sleep (hrs)</th>
+              <th>Meals</th>
+              <th>Mood</th>
+            </tr>
+          </thead>
+          <tbody class="text-center">
+            <% if (logs.length === 0) { %>
+              <tr><td colspan="5" class="text-muted">No logs yet. Add your first entry!</td></tr>
+            <% } else { %>
+              <% logs.forEach(log => { %>
+                <tr>
+                  <td><%= log.date.toDateString() %></td>
+                  <td><%= log.waterIntake %></td>
+                  <td><%= log.sleepHours %></td>
+                  <td><%= log.meals %></td>
+                  <td><%= log.mood %></td>
+                </tr>
+              <% }) %>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <footer class="text-center text-muted mt-5 mb-3">
+      <p>Made with 💙 by Team HealthMate</p>
+    </footer>
+  </body>
+</html>
