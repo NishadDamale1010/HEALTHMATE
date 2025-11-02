@@ -1,4 +1,3 @@
-// server.js
 const express = require("express");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
@@ -9,28 +8,28 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// Set EJS as view engine
+// View engine setup
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
-
-// Middleware
 app.use(express.static(path.join(__dirname, "public")));
 app.use(express.urlencoded({ extended: true }));
 
-// MongoDB Connection
+// MongoDB connection
 mongoose
-  .connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
+  .connect(process.env.MONGO_URI)
   .then(() => console.log("✅ MongoDB Connected"))
   .catch((err) => console.error("❌ MongoDB connection error:", err));
 
-// Schema
-const healthSchema = new mongoose.Schema({
+// Schemas
+const userSchema = new mongoose.Schema({
   name: String,
   email: String,
   password: String,
+  date: { type: Date, default: Date.now },
+});
+
+const healthSchema = new mongoose.Schema({
+  userEmail: String,
   date: { type: Date, default: Date.now },
   water: Number,
   sleep: Number,
@@ -38,53 +37,64 @@ const healthSchema = new mongoose.Schema({
   mood: String,
 });
 
+const User = mongoose.model("User", userSchema);
 const Health = mongoose.model("Health", healthSchema);
 
-// Routes
-app.get("/", async (req, res) => {
-  try {
-    const records = await Health.find().sort({ date: -1 });
-    res.render("index", {
-      title: "HealthMate - Your Health Assistant",
-      records,
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Error loading dashboard");
-  }
-});
+// ---------------- ROUTES ----------------
 
-// Registration page
+// Redirect root → login
+app.get("/", (req, res) => res.redirect("/login"));
+
+// Register page
 app.get("/register", (req, res) => {
   res.render("register", { title: "Register - HealthMate" });
 });
 
-// Handle registration form
 app.post("/register", async (req, res) => {
+  const { name, email, password } = req.body;
   try {
-    const { name, email, password } = req.body;
-    const newUser = new Health({ name, email, password });
-    await newUser.save();
-    res.redirect("/");
+    const existing = await User.findOne({ email });
+    if (existing) {
+      return res.send("<h3>Email already registered. <a href='/login'>Login</a></h3>");
+    }
+    await User.create({ name, email, password });
+    res.redirect("/login");
   } catch (err) {
     console.error(err);
-    res.status(500).send("Error registering user");
+    res.status(500).send("Error during registration");
+  }
+});
+
+// Login page
+app.get("/login", (req, res) => {
+  res.render("login", { title: "Login - HealthMate" });
+});
+
+app.post("/login", async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    const user = await User.findOne({ email, password });
+    if (!user) return res.send("<h3>Invalid credentials. <a href='/login'>Try again</a></h3>");
+    const logs = await Health.find({ userEmail: email }).sort({ date: -1 });
+    res.render("dashboard", { title: "Dashboard - HealthMate", user, logs });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Login failed");
   }
 });
 
 // Add health data
 app.post("/add", async (req, res) => {
+  const { email, water, sleep, meals, mood } = req.body;
   try {
-    const { water, sleep, meals, mood } = req.body;
-    await Health.create({ water, sleep, meals, mood });
-    res.redirect("/");
+    await Health.create({ userEmail: email, water, sleep, meals, mood });
+    const user = await User.findOne({ email });
+    const logs = await Health.find({ userEmail: email }).sort({ date: -1 });
+    res.render("dashboard", { title: "Dashboard - HealthMate", user, logs });
   } catch (err) {
     console.error(err);
     res.status(500).send("Error saving health data");
   }
 });
 
-// Start server
-app.listen(PORT, () =>
-  console.log(`🚀 Server running on port ${PORT}`)
-);
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
